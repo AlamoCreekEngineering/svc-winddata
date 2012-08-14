@@ -8,7 +8,8 @@ object ApplicationBuild extends Build {
     val appVersion      = "1.0-SNAPSHOT"
 
     val appDependencies = Seq(
-      // Add your project dependencies here,
+    	"com.rabbitmq" % "amqp-client" % "2.7.0",
+    	"postgresql" % "postgresql" % "9.0-801.jdbc3"
     )
 
     val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
@@ -16,3 +17,4 @@ object ApplicationBuild extends Build {
     )
 
 }
+
