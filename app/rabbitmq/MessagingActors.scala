@@ -5,16 +5,20 @@ import akka.actor.Props
 
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.QueueingConsumer
+import play.api.libs.concurrent._
 
 import play.api._
 import play.libs.Akka
 
+import models.Turbine
+import anorm._ 
+
 class SendingActor(channel: Channel, queue: String) extends Actor {
 	def receive = {
 		case some: String => {
-			val msg = (some + " : " + System.currentTimeMillis)
+			Logger.info(some + "====================")
+			val msg = math.cos(System.currentTimeMillis).toString//(some + " : " + System.currentTimeMillis)
 			channel.basicPublish("", queue, null, msg.getBytes)
-			Logger.info(msg)
 		}
 		case _ => 
 	}
@@ -34,7 +38,10 @@ class ListeningActor(channel: Channel, queque: String, f: (String) => Any) exten
 
 			context.actorOf(Props(new Actor {
 				def receive = {
-					case some:String => f(some)
+					case some:String => {
+						Turbine.insert(Turbine(anorm.NotAssigned,some))
+						f(some)
+					}
 				}
 			})) ! msg
 		}
