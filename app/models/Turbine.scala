@@ -24,23 +24,4 @@ object Turbine {
 		}
 	}
 
-
-  // def insert(computer: Computer) = {
-  //   DB.withConnection { implicit connection =>
-  //     SQL(
-  //       """
-  //         insert into computer values (
-  //           (select next value for computer_seq), 
-  //           {name}, {introduced}, {discontinued}, {company_id}
-  //         )
-  //       """
-  //     ).on(
-  //       'name -> computer.name,
-  //       'introduced -> computer.introduced,
-  //       'discontinued -> computer.discontinued,
-  //       'company_id -> computer.companyId
-  //     ).executeUpdate()
-  //   }
-  // }
-
 }
