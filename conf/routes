@@ -5,6 +5,7 @@
 # Home page
 GET     /                           controllers.Application.index
 GET     /start                      controllers.Application.start
+GET			/stop												controllers.Application.stop
 GET			/test												controllers.Application.test
 GET 		/live												controllers.Application.live
 

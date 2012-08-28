@@ -20,13 +20,27 @@ class SendingActor(channel: Channel, queue: String) extends Actor {
 			val msg = math.cos(System.currentTimeMillis).toString//(some + " : " + System.currentTimeMillis)
 			channel.basicPublish("", queue, null, msg.getBytes)
 		}
-		case _ => 
+		case _ =>
+	}
+}
+
+class Sending1Actor(channel: Channel, queue: String) extends Actor {
+	def receive = {
+		case some: String => {
+			Logger.info(some + "====================")
+			val msg = math.cos(System.currentTimeMillis).toString//(some + " : " + System.currentTimeMillis)
+			channel.basicPublish("", queue, null, msg.getBytes)
+		}
+		case _ =>
 	}
 }
 
 class ListeningActor(channel: Channel, queque: String, f: (String) => Any) extends Actor {
+
 	def receive = {
-		case _ => startReceiving
+		case _ => {
+			startReceiving
+		}
 	}
 
 	def startReceiving = {
@@ -38,7 +52,7 @@ class ListeningActor(channel: Channel, queque: String, f: (String) => Any) exten
 
 			context.actorOf(Props(new Actor {
 				def receive = {
-					case some:String => {
+					case some: String => {
 						Turbine.insert(Turbine(anorm.NotAssigned,some))
 						f(some)
 					}
