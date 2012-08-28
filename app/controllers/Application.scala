@@ -10,6 +10,12 @@ import play.api.libs.concurrent._
 import utils.Config
 import rabbitmq._
 
+import play.api.Play.current
+import akka.actor.Props
+import akka.pattern.ask
+import akka.util.Timeout
+import akka.util.duration._
+
 object Application extends Controller {
   
   def index = Action {
@@ -31,44 +37,65 @@ object Application extends Controller {
   	Ok(views.html.index(Turbine.test.toString + " cock sucker"))
   }
 
-  def live = WebSocket.using[String] { request => 
-    import akka.actor._
-    import akka.util.duration._
+  def live = WebSocket.async[String] { request => 
+    RetrieveActor.output("very nice stuff")
+  }
 
-    //open a websocket connection
-    //ignore the incoming message and open a connection to the rabbitmq message stream for the most recent data
+  import akka.actor.Actor
+import play.api._
+import play.api.mvc._
 
-    val connection = RabbitMQConnection.getConnection
-    val sendingChannel = connection.createChannel
-    val f = (x: String) => Logger.info("LOGGED FROM WEBSOCKET "+x)
-    val system = Config.RETRIEVAL_SYSTEM
+import play.api.libs.json._
+import play.api.libs.iteratee._
+import akka.actor._
+import akka.util.duration._
 
-    system.scheduler.schedule(
-      2 seconds
-      ,2 seconds
-      ,system.actorOf(Props(new Sending1Actor(sendingChannel,Config.RABBITMQ_QUEUE)))
-      ,""
-    )
+import play.api._
+import play.api.libs.json._
+import play.api.libs.iteratee._
+import play.api.libs.concurrent._
 
-    // Sender.setupListener(sendingChannel, Config.RABBITMQ_QUEUE, f)
+import akka.util.Timeout
+import akka.pattern.ask
 
+import play.api.Play.current
+// import models._
 
-    //send the most recent data as long as there is some
+import akka.actor._
+import akka.util.duration._
 
-    // val in = Iteratee.consume[String]()
-    val in = Iteratee.foreach[String]( s => Logger.info(s) )
-
-    // Send a single 'Hello!' message and close
-    val out = Enumerator("fag juice!") //>>> Enumerator.eof
+  class RetrieveActor extends Actor {
     
-    // val out = system.actorOf(Props(new Actor {
-    //   def receive = {
-    //     case some: String => {
-    //       Enumerator(some)
-    //     }
-    //   }
-    // })) ! msg
+    def receive = {
+      case some: String => {
+        sender ! some
+      }
+    }
+  }
 
-    (in, out)
+  object RetrieveActor {
+  implicit val timeout = Timeout(1 second)
+
+  lazy val default = {
+    val retriever = Akka.system.actorOf(Props[RetrieveActor])
+    retriever
+  }
+
+    def output(input: String): Promise[(Iteratee[String,_],Enumerator[String])] = {
+          (default ? input).asPromise.map {
+
+          case some: String => {
+            Logger.info("faggity fag fag fag")
+
+            val iteratee = Iteratee.foreach[String] { s => () }.mapDone { _ => () }
+
+            // val iteratee = Done[String,_]((),Input.EOF)
+            val enumerator =  Enumerator(some)
+            (iteratee,enumerator)
+          }
+        }
+
+    }
+
   }
 }
