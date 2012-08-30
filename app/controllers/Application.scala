@@ -33,14 +33,25 @@ object Application extends Controller {
 import akka.util.duration._
   def live = WebSocket.using[String] { request => 
 
-    val iteratee = Iteratee.foreach[String] ( s => () ).mapDone ( _ => () )
-
-    val timeStream = Enumerator.fromCallback { () => 
-      Promise.timeout(Some("dirty cock"), 2 seconds)      
+    val out = Enumerator.imperative[String]()
+    val in = Iteratee.foreach[String](msg => out.push(msg)).mapDone {
+      x => {
+        Logger.debug("Connection Closed")
+        "DONE"
+      }
     }
 
-    (iteratee,timeStream)
-    // RetrieveActor.output("very nice stuff")
+    out.push("Here's the first line")
+    
+    (in, out)
+    // val iteratee = Iteratee.foreach[String] ( s => () ).mapDone ( _ => () )
+
+    // val timeStream = Enumerator.fromCallback { () => 
+    //   Promise.timeout(Some("dirty cock"), 2 seconds)      
+    // }
+
+    // (iteratee,timeStream)
+    // // RetrieveActor.output("very nice stuff")
   }
 
 import akka.actor._
