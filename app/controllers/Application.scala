@@ -36,7 +36,7 @@ import akka.util.duration._
     val iteratee = Iteratee.foreach[String] ( s => () ).mapDone ( _ => () )
 
     val timeStream = Enumerator.fromCallback { () => 
-      Promise.timeout(Some("dirty cock"), 2 seconds)
+      Promise.timeout(Some("dirty cock"), 2 seconds)      
     }
 
     (iteratee,timeStream)

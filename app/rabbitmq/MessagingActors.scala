@@ -87,12 +87,17 @@ class TurbineDataEventBus extends ActorEventBus with LookupClassification {
 }
 
 class RetrieveActor extends Actor {
+
+	var someMsg: String = "dirty joke"
+
   def receive = {
     case some: MessageEvent => {
     	Logger.info("COCK AND BALLZ >>>> "+some.msg.msg)
-    	some.msg.msg
+    	someMsg = some.msg.msg
     }
   }
+
+  someMsg
 }
 
 object DataBusSingleton {
