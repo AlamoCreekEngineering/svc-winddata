@@ -52,7 +52,39 @@ import akka.pattern.ask
 import akka.util.Timeout
 import akka.util.duration._
 
+class SimpleConnection extends akka.actor.Actor { 
+        var outbound: Option[PushEnumerator[String]] = None 
+        var inbound: Option[Iteratee[String, Unit]] = None 
+        def receive = { 
+                case("start connection", connType: String) => { 
+                        connType match { 
+                                case "websocket" => { 
 
+  //                                 Enumerator.imperative[String] (
+  // onStart = { () => you write your code here },
+  // onComplete = { () => /*you write your code here*/ }
+  // )
+                                        outbound = Some(Enumerator.imperative[String]())
+
+                                        inbound = Some(Iteratee.foreach[String](event => self ! event).mapDone { 
+                                                _ => { 
+                                                        outbound.get >>> Enumerator.eof 
+                                                        context.stop(self) 
+                                                } 
+                                        }) 
+                                        sender ! (inbound.get, outbound.get) 
+                                } 
+                                case "comet" => { 
+                                        outbound = Some(Enumerator.imperative[String]()) 
+                                        sender ! outbound.get 
+                                } 
+                        } 
+                } 
+                case js: String => { 
+                        //do something with inbound JSON from the browser here 
+                } 
+        } 
+} 
   // def live = Action {
   //   val system = Config.RETRIEVAL_SYSTEM
   //   val turbineEventBus = DataBusSingleton.getBus
