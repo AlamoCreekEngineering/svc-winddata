@@ -10,6 +10,17 @@ import play.api.libs.concurrent._
 import utils.Config
 import rabbitmq._
 
+//////////////////////////////////////////////////////////////////
+import akka.actor._
+import akka.actor.ActorSystem
+import akka.actor.Props
+import akka.event.ActorEventBus
+import akka.event.LookupClassification
+import akka.pattern.ask
+import akka.util.Timeout
+import akka.util.duration._
+//////////////////////////////////////////////////////////////////
+
 object Application extends Controller {
   
   def index = Action {
@@ -30,18 +41,42 @@ object Application extends Controller {
   	Ok(views.html.index(Turbine.test.toString + " cock sucker"))
   }
 
-import akka.util.duration._
+  object SimpleIterateeSingleton {
+    val enum: PushEnumerator[String] = Enumerator.imperative[String]()
+    val iter: Iteratee[String,_] = Iteratee.foreach[String] ( s => {
+      Logger.info(s); /*enum.push(s)*/ }).mapDone ( _ => () )
+
+    def updateEnum(msg: String) = {
+      Logger.debug("updating enum")
+      // Enumerator("cock surprise") >>> enum
+      enum.push(msg)
+      // enum |>> iter
+    }
+  }
+
+  import akka.util.duration._
+  
   def live = WebSocket.using[String] { request => 
 
-    val out = Enumerator.imperative[String]()
-    val in = Iteratee.foreach[String](msg => out.push(msg)).mapDone {
-      x => {
-        Logger.debug("Connection Closed")
-        "DONE"
-      }
-    }
+    val system = Config.RETRIEVAL_SYSTEM
+    val turbineEventBus = DataBusSingleton.getBus
+    val TURBINE_CHANNEL = "/turbine/current"
+    val subscriber = system.actorOf(Props[RetrieveActor])
+    turbineEventBus.subscribe(subscriber,TURBINE_CHANNEL)
 
-    out.push("Here's the first line")
+    val out = SimpleIterateeSingleton.enum
+    val in = SimpleIterateeSingleton.iter
+
+
+    // val in = Iteratee.foreach[String](msg => out.push(msg)).mapDone {
+    //   x => {
+    //     Logger.debug("Connection Closed")
+    //     "DONE"
+    //   }
+    // }
+
+    // Promise.timeout(Logger.debug("Here's the first line"), 2 seconds)      
+
     
     (in, out)
     // val iteratee = Iteratee.foreach[String] ( s => () ).mapDone ( _ => () )
@@ -53,15 +88,6 @@ import akka.util.duration._
     // (iteratee,timeStream)
     // // RetrieveActor.output("very nice stuff")
   }
-
-import akka.actor._
-import akka.actor.ActorSystem
-import akka.actor.Props
-import akka.event.ActorEventBus
-import akka.event.LookupClassification
-import akka.pattern.ask
-import akka.util.Timeout
-import akka.util.duration._
 
 class SimpleConnection extends akka.actor.Actor { 
         var outbound: Option[PushEnumerator[String]] = None 

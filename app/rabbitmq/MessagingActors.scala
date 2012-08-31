@@ -61,6 +61,7 @@ class ListeningActor(channel: Channel, queque: String, f: (String) => Any) exten
 			context.actorOf(Props(new Actor {
 				def receive = {
 					case some: String => {
+						Logger.info("SO MUCH BALL SAC")
 						Turbine.insert(Turbine(anorm.NotAssigned,some))
 						tEventBus.publish(MessageEvent(TURBINE_CHANNEL,Message(some)))
 						f(some)
@@ -86,18 +87,21 @@ class TurbineDataEventBus extends ActorEventBus with LookupClassification {
 	protected def publish(event: Event, subscriber: Subscriber): Unit = { subscriber ! event }
 }
 
+import controllers.Application._
+
 class RetrieveActor extends Actor {
 
-	var someMsg: String = "dirty joke"
+//	var someMsg: String = "dirty joke"
 
   def receive = {
     case some: MessageEvent => {
     	Logger.info("COCK AND BALLZ >>>> "+some.msg.msg)
-    	someMsg = some.msg.msg
+    	SimpleIterateeSingleton.updateEnum(some.msg.msg)
     }
+    case _ => Logger.info("SOMETHING ELSE")
   }
 
-  someMsg
+//  someMsg
 }
 
 object DataBusSingleton {
