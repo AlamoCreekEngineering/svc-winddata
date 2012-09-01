@@ -34,7 +34,6 @@ import utils.Config
 class SendingActor(channel: Channel, queue: String) extends Actor {
 	def receive = {
 		case some: String => {
-			Logger.info(some + "====================")
 			val msg = math.cos(System.currentTimeMillis).toString//(some + " : " + System.currentTimeMillis)
 			channel.basicPublish("", queue, null, msg.getBytes)
 		}
@@ -43,9 +42,8 @@ class SendingActor(channel: Channel, queue: String) extends Actor {
 }
 
 class ListeningActor(channel: Channel, queque: String, f: (String) => Any) extends Actor {
-	val system = Config.RETRIEVAL_SYSTEM
+
   val tEventBus = DataBusSingleton.getBus
-	val TURBINE_CHANNEL = "/turbine/current"
 
 	def receive = {
 		case _ => startReceiving
@@ -61,25 +59,22 @@ class ListeningActor(channel: Channel, queque: String, f: (String) => Any) exten
 			context.actorOf(Props(new Actor {
 				def receive = {
 					case some: String => {
-						Logger.info("SO MUCH BALL SAC")
 						Turbine.insert(Turbine(anorm.NotAssigned,some))
-						tEventBus.publish(MessageEvent(TURBINE_CHANNEL,Message(some)))
+						tEventBus.publish(MessageEvent(Config.TURBINE_CHANNEL,Message(some)))
 						f(some)
 					}
 				}
 			})) ! msg
 		}
 	}
-
 	//def postStop() {} //TODO: disconnect from postgres and rabbitmq
 }
-
 
 case class Message(val msg:String)
 case class MessageEvent(val channel:String, val msg:Message)
 
 class TurbineDataEventBus extends ActorEventBus with LookupClassification {
-	type Event = MessageEvent
+	type Event 			= MessageEvent
 	type Classifier = String
 
 	protected def mapSize(): Int = { 10 }
@@ -90,18 +85,9 @@ class TurbineDataEventBus extends ActorEventBus with LookupClassification {
 import controllers.Application._
 
 class RetrieveActor extends Actor {
-
-//	var someMsg: String = "dirty joke"
-
   def receive = {
-    case some: MessageEvent => {
-    	Logger.info("COCK AND BALLZ >>>> "+some.msg.msg)
-    	SimpleIterateeSingleton.updateEnum(some.msg.msg)
-    }
-    case _ => Logger.info("SOMETHING ELSE")
+    case some: MessageEvent => SimpleIterateeSingleton.updateEnumerator(some.msg.msg)
   }
-
-//  someMsg
 }
 
 object DataBusSingleton {
@@ -119,29 +105,4 @@ object DataBusSingleton {
 			}
 		}
 	}
-}
-
-object RetrieveActor {
-  implicit val timeout = Timeout(1 second)
-
-  // def subscribe = {
-  // 	val system = Config.RETRIEVAL_SYSTEM
-  // 	val turbineEventBus = DataBusSingleton.getBus
-		// val TURBINE_CHANNEL = "/turbine/current"
-		// val subscriber = system.actorOf(Props[RetrieveActor])
-		// turbineEventBus.subscribe(subscriber,TURBINE_CHANNEL)
-  // }
-
-  // lazy val retriever = system.actorOf(Props[RetrieveActor])
-
-  // def output(input: String): (Iteratee[String,_],Enumerator[String]) = {
-  //       //(retriever ? input).asPromise.map {
-  //         case some: String => {
-  //           val iteratee = Iteratee.foreach[String] ( s => () ).mapDone ( _ => () )
-  //           // val iteratee = Done[String,Unit]((),Input.EOF)
-  //           val enumerator =  Enumerator(some)
-  //           (iteratee,enumerator)
-  //         }
-  //     //}
-  // }
 }

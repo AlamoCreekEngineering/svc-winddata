@@ -10,4 +10,5 @@ object Config {
   val RABBITMQ_EXCHANGE = config.getString("rabbit.exchange").getOrElse("exchange")
   val STORAGE_SYSTEM = ActorSystem("Storage")
   val RETRIEVAL_SYSTEM = ActorSystem("Retrieval")
+  val TURBINE_CHANNEL = "/turbine/current"
 }

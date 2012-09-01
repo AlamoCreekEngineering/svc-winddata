@@ -42,6 +42,7 @@ object Sender {
 	}
 
 	def stopSending = {
-		// ActorSystem.shutdown
+    val system = Config.STORAGE_SYSTEM
+		system.shutdown
 	}
 }
