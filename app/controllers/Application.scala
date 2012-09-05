@@ -26,7 +26,7 @@ import play.api.libs.json._
 object Application extends Controller {
   
   def index = Action {
-    Ok(views.html.index("Your new application is ready."))
+    Ok(views.html.index("FUCK EVERYTHING YOU THOUGHT YOU KNEW"))
   }
 
   def start = Action {
