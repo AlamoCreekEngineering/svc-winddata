@@ -44,15 +44,18 @@ object Application extends Controller {
   }
 
   object SimpleIterateeSingleton {
-    private val out: PushEnumerator[JsValue] = Enumerator.imperative[JsValue]()
-    private val in: Iteratee[JsValue,_] = Iteratee.foreach[JsValue] ( s => {
-      Logger.info(s.toString); /*enum.push(s)*/ }).mapDone ( _ => () )
 
-    def getOut: PushEnumerator[JsValue] = out
+    private val (out, channel) = Concurrent.broadcast[JsValue]
+
+    // private val out: PushEnumerator[JsValue] = Enumerator.imperative[JsValue]()
+    private val in: Iteratee[JsValue,_] = Iteratee.foreach[JsValue] ( s => {
+    Logger.info(s.toString); /*enum.push(s)*/ }).mapDone ( _ => () )
+
+    def getOut: Enumerator[JsValue] = out
     def getIn: Iteratee[JsValue,_] = in
 
     def updateEnumerator(msg: String) = {
-      out.push(Json.toJson(Seq(Seq(Seq(1,2),Seq(4,5)))))
+      channel.push(Json.toJson(Seq(Seq(Seq(1,2),Seq(4,5)))))
     }
   }
   
