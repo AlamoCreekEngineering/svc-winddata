@@ -45,21 +45,26 @@ object Application extends Controller {
 
   object SimpleIterateeSingleton {
 
-    private val (out, channel) = Concurrent.broadcast[JsValue]
+    private val (out, channel) = Concurrent.broadcast[String]
 
     // private val out: PushEnumerator[JsValue] = Enumerator.imperative[JsValue]()
-    private val in: Iteratee[JsValue,_] = Iteratee.foreach[JsValue] ( s => {
+    private val in: Iteratee[String,_] = Iteratee.foreach[String] ( s => {
     Logger.info(s.toString); /*enum.push(s)*/ }).mapDone ( _ => () )
 
-    def getOut: Enumerator[JsValue] = out
-    def getIn: Iteratee[JsValue,_] = in
+    def getOut: Enumerator[String] = out
+    def getIn: Iteratee[String,_] = in
 
     def updateEnumerator(msg: String) = {
-      channel.push(Json.toJson(Seq(Seq(Seq(1,2),Seq(4,5)))))
+      import com.codahale.jerkson.Json._
+      import scala.util.Random
+      val r = new Random
+      val json = generate( Map( "x" -> r.nextInt(10), "y" -> r.nextInt(10) ) )
+      // channel.push(Json.toJson(Seq(Seq(Seq(1,2),Seq(4,5)))))
+      channel.push(json)
     }
   }
   
-  def live = WebSocket.using[JsValue] { request => 
+  def live = WebSocket.using[String] { request => 
 
     val system = Config.RETRIEVAL_SYSTEM
     val turbineEventBus = DataBusSingleton.getBus

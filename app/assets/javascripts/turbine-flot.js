@@ -22,43 +22,48 @@ $(function() {
     // What do we do when we get a message? 
     ws.onmessage = function(evt) { 
         var d = $.parseJSON(evt.data); 
-        console.log("cock and ballz");
         series.data.push([d.x, d.y]);
+				console.log([series.data]);
         // Keep the data series a manageable length 
         while (series.data.length > datalen) { 
             series.data.shift(); 
-        } 
-        if(plot) { 
+        }
+        if(plot) {
             // Create the plot if it's not there already 
-            plot.setData([series]); 
-            plot.setupGrid(); 
-            plot.draw(); 
-        } else if(series.data.length > 10) { 
+            plot.setData([series.data]);
+            plot.setupGrid();
+            plot.draw();
+        } else if(series.data.length > 1) { 
             // Update the plot 
-            plot = $.plot($placeholder, [series], { 
-                xaxis:{ 
-                    mode: "time", 
-                    timeformat: "%H:%M:%S", 
-                    minTickSize: [2, "second"]
+            plot = $.plot(
+            	$placeholder,
+            	[series.data],
+            	{ 
+                xaxis:{
+                	  min: 0, 
+                    max: 15 
+                    // mode: "time", 
+                    // timeformat: "%H:%M:%S", 
+                    // minTickSize: [2, "second"]
                 }, 
                 yaxis: { 
                     min: 0, 
-                    max: 5 
+                    max: 15 
                 } 
             }); 
             plot.draw(); 
         } 
-    } 
+    }
     // Just update our conn_status field with the connection status 
-    ws.onopen = function(evt) { 
+    ws.onopen = function(evt) {
         $('#conn_status').html('<b>Connected</b>'); 
-    } 
-    ws.onerror = function(evt) { 
+    }
+    ws.onerror = function(evt) {
         $('#conn_status').html('<b>Error</b>'); 
-    } 
-    ws.onclose = function(evt) { 
+    }
+    ws.onclose = function(evt) {
         $('#conn_status').html('<b>Closed</b>'); 
-    } 
+    }
 });
 // $(function () {
 //   var theData = $('#plot-data').data('plot');
